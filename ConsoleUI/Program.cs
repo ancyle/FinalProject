@@ -13,19 +13,24 @@ namespace ConsoleUI
 
             //CategoryTest();
 
-            //ProductDetailsTest();
+            ProductDetailsTest();
 
-            Console.ReadKey(true);
+            //Console.ReadKey(true);
             Console.WriteLine("Hello World!");
         }
 
         private static void ProductDetailsTest()
         {
             ProductManager productManager = new(new EfProductDal());
-            foreach (var item in productManager.GetProductDetails())
+            var result = productManager.GetProductDetails();
+            if (result.Success)
             {
-                Console.WriteLine(item.ProductId + "/" + item.ProductName + "/" + item.CategoryName + "/" + item.UnitsInStock);
+                foreach (var item in result.Data)
+                {
+                    Console.WriteLine(item.ProductId + "/" + item.ProductName + "/" + item.CategoryName + "/" + item.UnitsInStock);
+                }
             }
+            else Console.WriteLine(result.Message);
         }
 
         private static void CategoryTest()
@@ -41,7 +46,7 @@ namespace ConsoleUI
         {
             ProductManager productManager = new ProductManager(new EfProductDal());
 
-            foreach (var item in productManager.GetByUnitPrice(9.99m, 20))
+            foreach (var item in productManager.GetByUnitPrice(9.99m, 20).Data)
             {
                 Console.WriteLine(item.ProductName);
             }
