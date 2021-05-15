@@ -6,27 +6,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Core.Utilities.Results;
 
 namespace Business.Concrete
 {
     public class CategoryManager : ICategoryService
     {
-        ICategoryDal _categoryDal;
+        private readonly ICategoryDal _categoryDal;
 
         public CategoryManager(ICategoryDal categoryDal)
         {
             _categoryDal = categoryDal;
         }
 
-        public List<Category> GetAll()
+        public IDataResult<List<Category>> GetAll()
         {
             //İş Kodları
-            return _categoryDal.GetAll();
+            return new SuccessDataResult<List<Category>>(_categoryDal.GetAll());
         }
         //Select * from Categories c/>alias<\ where c.CategoryId = categoryId
-        public Category GetById(int categoryId)
+        public IDataResult<Category> GetById(int categoryId)
         {
-            return _categoryDal.Get(x => x.CategoryId == categoryId);
+            return new SuccessDataResult<Category>(_categoryDal.Get(x => x.CategoryId == categoryId));
         }
     }
 }
