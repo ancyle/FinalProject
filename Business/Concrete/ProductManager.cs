@@ -7,16 +7,13 @@ using Entities.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Business.BusinessAspects.Autofac;
-using Business.CCS;
 using Business.ValidationRules.FluentValidation;
+using Core.Aspects.Autofac.Caching;
+using Core.Aspects.Autofac.Performance;
+using Core.Aspects.Autofac.Transaction;
 using Core.Aspects.Autofac.Validation;
-using Core.CrossCuttingConcerns.Validation;
 using Core.Utilities.Business;
-using DataAccess.Concrete.EntityFramework;
-using FluentValidation;
 
 namespace Business.Concrete
 {
@@ -33,6 +30,7 @@ namespace Business.Concrete
 
         [SecuredOperation("product.add,admin")]
         [ValidationAspect(typeof(ProductValidator))]
+        [CacheRemoveAspect("IProductService.Get")]
         public IResult Add(Product product)
         {
             //business codes
@@ -44,6 +42,7 @@ namespace Business.Concrete
             return new SuccessResult(Messages.ProductAdded);
         }
 
+        [CacheAspect]
         public IDataResult<List<Product>> GetAll()
         {
             if (DateTime.Now.Hour == 22)
@@ -63,6 +62,8 @@ namespace Business.Concrete
             return new SuccessDataResult<List<Product>>(_productDal.GetAll(x => x.UnitPrice >= min && x.UnitPrice <= max));
         }
 
+        [CacheAspect]
+        [PerformanceAspect(5)]
         public IDataResult<Product> GetProductById(int productId)
         {
             return new SuccessDataResult<Product>(_productDal.Get(x => x.ProductId == productId));
@@ -74,6 +75,7 @@ namespace Business.Concrete
         }
 
         [ValidationAspect(typeof(ProductValidator))]
+        [CacheRemoveAspect("IProductService.Get")]
         public IResult Update(Product product)
         {
             var count = _productDal.GetAll(x => x.CategoryId == 1).Count;
@@ -100,6 +102,15 @@ namespace Business.Concrete
             var result = _categoryService.GetAll();
             if (result.Data.Count > 15) return new ErrorResult(Messages.CategoryLimitExceeded);
             return new SuccessResult();
+        }
+
+        [TransactionScopeAspect]
+        public IResult AddTransactionalTest(Product product)
+        {
+            Add(product);
+            if (product.UnitPrice < 10) throw new Exception("");
+            Add(product);
+            return null;
         }
     }
 }
